@@ -36,16 +36,21 @@ dependencies:
     cupertino_icons: ^1.0.8
 
     # Akses perangkat keras kamera
-    camera: ^0.10.5
+    camera: ^0.12.0+1
 
     # Eksekusi model YOLO format .tflite secara lokal
-    tflite_flutter: ^0.10.4
+    tflite_flutter: ^0.12.1
 
     # Manipulasi matriks gambar (wajib untuk preprocessing input YOLO)
     image: ^4.1.3
 
     # SDK resmi Google untuk Gemini API
-    google_generative_ai: ^0.2.2
+    google_generative_ai: ^0.4.7
+    flutter_dotenv: ^6.0.1
+    image_picker: ^1.2.2
+    sqflite: ^2.4.2+1
+    path: ^1.9.1
+    flutter_markdown: ^0.7.7+1
 
 dev_dependencies:
     flutter_test:
@@ -69,6 +74,7 @@ flutter:
     uses-material-design: true
 
     assets:
+        - .env
         - assets/model.tflite
         - assets/labels.txt
 
