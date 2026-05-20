@@ -17,13 +17,28 @@ class DetectedIngredientsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (ingredients.isEmpty) {
-      return const Text(
-        'Belum ada bahan terdeteksi.',
-        style: TextStyle(
-          color: Color(0xFF4B5563),
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Belum ada bahan terdeteksi',
+            style: TextStyle(
+              color: Color(0xFF111827),
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Coba arahkan kamera lebih dekat ke bahan makanan, pastikan pencahayaan cukup, atau masukkan bahan secara manual.',
+            style: TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              height: 1.45,
+            ),
+          ),
+        ],
       );
     }
 

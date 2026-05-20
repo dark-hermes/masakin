@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/app_theme.dart';
 import 'main_screen.dart';
@@ -15,6 +16,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  static const _onboardingSeenKey = 'onboarding_seen';
   late final PageController _pageController;
   int _currentPage = 0;
 
@@ -61,10 +63,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  void _skipToMain() {
+  Future<void> _completeOnboardingAndOpenMain() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingSeenKey, true);
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const MainScreen()),
     );
+  }
+
+  void _skipToMain() {
+    _completeOnboardingAndOpenMain();
   }
 
   void _handlePrimaryAction() {
@@ -230,7 +239,7 @@ class _OnboardingPage extends StatelessWidget {
         final isCompactHeight = constraints.maxHeight < 520;
         final illustrationHeightFactor = switch (data.illustration) {
           _OnboardingIllustrationType.nutrition =>
-            isCompactHeight ? 0.48 : 0.62,
+            isCompactHeight ? 0.68 : 0.74,
           _ => isCompactHeight ? 0.46 : 0.52,
         };
         final maxIllustrationWidth = switch (data.illustration) {
@@ -247,51 +256,57 @@ class _OnboardingPage extends StatelessWidget {
         final titleTopGap = isCompactHeight
             ? 16.0
             : switch (data.illustration) {
-                _OnboardingIllustrationType.nutrition => 48.0,
+                _OnboardingIllustrationType.nutrition => 24.0,
                 _ => 40.0,
               };
         final descriptionGap = isCompactHeight ? 10.0 : 16.0;
 
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: Column(
-            children: [
-              SizedBox(
-                height: constraints.maxHeight * illustrationHeightFactor,
-                child: Align(
-                  alignment:
-                      data.illustration == _OnboardingIllustrationType.nutrition
-                      ? Alignment.topCenter
-                      : Alignment.center,
-                  child: _OnboardingIllustration(
-                    type: data.illustration,
-                    size: illustrationSize,
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: constraints.maxHeight * illustrationHeightFactor,
+                    child: Align(
+                      alignment:
+                          data.illustration ==
+                              _OnboardingIllustrationType.nutrition
+                          ? Alignment.topCenter
+                          : Alignment.center,
+                      child: _OnboardingIllustration(
+                        type: data.illustration,
+                        size: illustrationSize,
+                      ),
+                    ),
                   ),
-                ),
+                  SizedBox(height: titleTopGap),
+                  Text(
+                    data.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                    ),
+                  ),
+                  SizedBox(height: descriptionGap),
+                  Text(
+                    data.description,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      height: 1.625,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: titleTopGap),
-              Text(
-                data.title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
-                ),
-              ),
-              SizedBox(height: descriptionGap),
-              Text(
-                data.description,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  height: 1.625,
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -743,7 +758,7 @@ class _NutritionIllustration extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: width * 1.333,
+      constraints: BoxConstraints(minHeight: width * 1.333),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,

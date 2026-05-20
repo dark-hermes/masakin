@@ -88,6 +88,30 @@ class DatabaseHelper {
     return db.delete(tableSavedRecipes, where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<int> deleteSavedRecipeByTitle(String title) async {
+    final db = await database;
+    return db.delete(
+      tableSavedRecipes,
+      where: 'LOWER(title) = LOWER(?)',
+      whereArgs: [title.trim()],
+    );
+  }
+
+  Future<bool> isRecipeSaved(String title) async {
+    final normalizedTitle = title.trim();
+    if (normalizedTitle.isEmpty) return false;
+
+    final db = await database;
+    final rows = await db.query(
+      tableSavedRecipes,
+      columns: const ['id'],
+      where: 'LOWER(title) = LOWER(?)',
+      whereArgs: [normalizedTitle],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
   Future<List<SavedRecipe>> fetchSavedRecipes() async {
     final db = await database;
     final rows = await db.query(tableSavedRecipes, orderBy: 'saved_at DESC');

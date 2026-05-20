@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/app_theme.dart';
+import 'main_screen.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -8,6 +10,7 @@ class SplashScreen extends StatefulWidget {
 
   static const routeName = '/';
   static const initializationDuration = Duration(seconds: 3);
+  static const onboardingSeenKey = 'onboarding_seen';
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -22,10 +25,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     await Future<void>.delayed(SplashScreen.initializationDuration);
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding =
+        prefs.getBool(SplashScreen.onboardingSeenKey) ?? false;
 
     if (!mounted) return;
 
-    Navigator.of(context).pushReplacementNamed(OnboardingScreen.routeName);
+    Navigator.of(context).pushReplacementNamed(
+      hasSeenOnboarding ? MainScreen.routeName : OnboardingScreen.routeName,
+    );
   }
 
   @override
@@ -60,7 +68,7 @@ class _SplashContent extends StatelessWidget {
           _SplashLogo(size: logoSize),
           const SizedBox(height: 34),
           const Text(
-            'MasAkIn',
+            'MasakIn',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.textPrimary,
@@ -83,16 +91,56 @@ class _SplashContent extends StatelessWidget {
           const SizedBox(height: 58),
           const _LoadingDots(),
           const SizedBox(height: 14),
-          const Text(
-            'Loading...',
-            style: TextStyle(
-              color: Color(0xFF9CA3AF),
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              height: 1.2,
-            ),
-          ),
+          const _LoadingLabel(),
         ],
+      ),
+    );
+  }
+}
+
+class _LoadingLabel extends StatefulWidget {
+  const _LoadingLabel();
+
+  @override
+  State<_LoadingLabel> createState() => _LoadingLabelState();
+}
+
+class _LoadingLabelState extends State<_LoadingLabel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(
+      begin: 0.35,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: const Text(
+        'Loading...',
+        style: TextStyle(
+          color: Color(0xFF9CA3AF),
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          height: 1.2,
+        ),
       ),
     );
   }
@@ -153,20 +201,67 @@ class _SplashLogo extends StatelessWidget {
   }
 }
 
-class _LoadingDots extends StatelessWidget {
+class _LoadingDots extends StatefulWidget {
   const _LoadingDots();
 
   @override
+  State<_LoadingDots> createState() => _LoadingDotsState();
+}
+
+class _LoadingDotsState extends State<_LoadingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  double _intensityFor(int index, double progress) {
+    final wavePosition = progress * 3;
+    final distance = (wavePosition - index).abs();
+    return (1 - distance).clamp(0, 1).toDouble();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _LoadingDot(color: AppColors.primary),
-        SizedBox(width: 8),
-        _LoadingDot(color: AppColors.accent),
-        SizedBox(width: 8),
-        _LoadingDot(color: AppColors.primary),
-      ],
+    const colors = [AppColors.primary, AppColors.accent, AppColors.primary];
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(colors.length, (index) {
+            final intensity = _intensityFor(index, _controller.value);
+            final scale = 1 + (intensity * 0.35);
+            final opacity = 0.35 + (intensity * 0.65);
+
+            return Padding(
+              padding: EdgeInsets.only(
+                right: index == colors.length - 1 ? 0 : 8,
+              ),
+              child: Transform.scale(
+                scale: scale,
+                child: Opacity(
+                  opacity: opacity,
+                  child: _LoadingDot(color: colors[index]),
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }

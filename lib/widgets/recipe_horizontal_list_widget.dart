@@ -9,12 +9,18 @@ class RecipeHorizontalListWidget extends StatelessWidget {
     this.onRecipeTap,
   });
 
-  final List<Map<String, dynamic>> recipes;
+  final List<dynamic> recipes;
   final ValueChanged<Map<String, dynamic>>? onRecipeTap;
 
   @override
   Widget build(BuildContext context) {
-    if (recipes.isEmpty) {
+    final visibleRecipes = recipes
+        .take(3)
+        .map(_asRecipeMap)
+        .whereType<Map<String, dynamic>>()
+        .toList(growable: false);
+
+    if (visibleRecipes.isEmpty) {
       return const SizedBox(
         height: 120,
         child: Align(
@@ -35,9 +41,9 @@ class RecipeHorizontalListWidget extends StatelessWidget {
       height: 320,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: recipes.length,
+        itemCount: visibleRecipes.length,
         itemBuilder: (context, index) {
-          final recipe = recipes[index];
+          final recipe = visibleRecipes[index];
           return _RecipeCard(
             recipe: recipe,
             onTap: onRecipeTap == null ? null : () => onRecipeTap!(recipe),
@@ -45,6 +51,14 @@ class RecipeHorizontalListWidget extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Map<String, dynamic>? _asRecipeMap(Object? value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map((key, value) => MapEntry(key.toString(), value));
+    }
+    return null;
   }
 }
 
@@ -272,14 +286,22 @@ class _MacroTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+          SizedBox(
+            width: double.infinity,
+            height: 16,
+            child: FittedBox(
+              alignment: Alignment.centerLeft,
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
         ],

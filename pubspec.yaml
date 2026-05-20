@@ -36,7 +36,7 @@ dependencies:
     cupertino_icons: ^1.0.8
 
     # Akses perangkat keras kamera
-    camera: ^0.12.0+1
+    camera: ^0.10.6
 
     # Eksekusi model YOLO format .tflite secara lokal
     tflite_flutter: ^0.12.1
@@ -51,6 +51,7 @@ dependencies:
     sqflite: ^2.4.2+1
     path: ^1.9.1
     flutter_markdown: ^0.7.7+1
+    shared_preferences: ^2.5.3
 
 dev_dependencies:
     flutter_test:
